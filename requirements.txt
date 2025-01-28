@@ -1,5 +1,6 @@
 Flask==3.1.0
 matplotlib==3.10.0
+/libraries/pyaudio_wheels-0.0.1-cp39-cp39-manylinux2010_x86_64.whl
 numpy==2.2.0
 opencv-python==4.10.0.84
 pandas==2.2.3
