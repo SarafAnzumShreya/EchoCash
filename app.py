@@ -94,5 +94,5 @@ def enforce_https():
             return redirect(request.url.replace("http://", "https://"), code=301)
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Allow Render to assign port dynamically
+    port = int(os.environ.get("PORT", 10000))  # Allow Render to assign port dynamically
     app.run(host="0.0.0.0", port=port, debug=True)
