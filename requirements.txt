@@ -1,5 +1,6 @@
 Flask==3.1.0
 numpy
+gunicorn==20.1.0
 opencv-python==4.10.0.84
 pyttsx3==2.98
 PyYAML==6.0.2
