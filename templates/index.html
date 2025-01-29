@@ -24,9 +24,6 @@
         img {
             border: 2px solid #333;
         }
-        audio {
-            margin-top: 10px;
-        }
     </style>
 </head>
 <body>
@@ -34,11 +31,5 @@
     <div class="video-container">
         <img src="/video_feed" alt="Video Stream">
     </div>
-
-    <!-- Audio player to play the audio -->
-    <audio id="audio" controls autoplay>
-        <source src="{{ url_for('static', filename='audio.mp3') }}" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
 </body>
 </html>
