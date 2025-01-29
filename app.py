@@ -1,4 +1,4 @@
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, request, redirect
 import cv2
 import pyttsx3
 import yaml
@@ -81,13 +81,21 @@ def generate_frames():
 
     cap.release()
 
-@app.route("/")
-def index():
-    return render_template("index.html")
-
 @app.route("/video_feed")
 def video_feed():
     return Response(generate_frames(), mimetype="multipart/x-mixed-replace; boundary=frame")
 
+app = Flask(__name__)
+
+@app.before_request
+def enforce_https():
+    """Redirect HTTP requests to HTTPS"""
+    if request.headers.get("X-Forwarded-Proto", "http") != "https":
+        return redirect(request.url.replace("http://", "https://"), code=301)
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8050, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
