@@ -3,33 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Currency Detection</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-        h1 {
-            margin: 20px 0;
-        }
-        .video-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        img {
-            border: 2px solid #333;
-        }
-    </style>
+    <title>Live Currency Detection</title>
 </head>
 <body>
-    <h1>Currency Detection</h1>
-    <div class="video-container">
-        <img src="/video_feed" alt="Video Stream">
-    </div>
+    <h1>Live Currency Detection</h1>
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+    <img id="processed" />
+
+    <script>
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        const processed = document.getElementById("processed");
+        const ctx = canvas.getContext("2d");
+
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+            } catch (err) {
+                console.error("Error accessing camera:", err);
+            }
+        }
+
+        async function sendFrame() {
+            if (!video.srcObject) return;
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(async (blob) => {
+                const formData = new FormData();
+                formData.append("frame", blob, "frame.jpg");
+
+                try {
+                    const response = await fetch("/video_feed", {
+                        method: "POST",
+                        body: formData,
+                    });
+                    const imageBlob = await response.blob();
+                    const imageUrl = URL.createObjectURL(imageBlob);
+                    processed.src = imageUrl;
+                } catch (err) {
+                    console.error("Error sending frame:", err);
+                }
+            }, "image/jpeg");
+        }
+
+        startCamera();
+        setInterval(sendFrame, 100); // Send frames every 100ms
+    </script>
 </body>
 </html>
