@@ -1,10 +1,12 @@
 from flask import Flask, render_template, Response
 import cv2
-import pyttsx3
 import yaml
 import time
 import threading
+from gtts import gTTS
 from ultralytics import YOLO
+import simpleaudio as sa
+from io import BytesIO
 
 app = Flask(__name__)
 model = YOLO("best_model.pt")
@@ -17,11 +19,18 @@ speak_lock = threading.Lock()
 
 def speak(text):
     try:
-        engine = pyttsx3.init()  # Initialize a new engine instance for each call
-        engine.say(text)
-        engine.runAndWait()
-        engine.stop()  # Clean up the engine after use
-        print(f"Spoken: {text}")
+        # Generate speech from the text using gTTS
+        tts = gTTS(text=text, lang='en')
+        
+        # Save the speech to an in-memory file (BytesIO)
+        audio_file = BytesIO()
+        tts.save(audio_file)
+        audio_file.seek(0)  # Go to the beginning of the file
+
+        # Play the audio using simpleaudio
+        wave_obj = sa.WaveObject.from_wave_file(audio_file)
+        play_obj = wave_obj.play()
+        play_obj.wait_done()  # Wait until the audio is done playing
     except Exception as e:
         print(f"Error in speak function: {e}")
 
