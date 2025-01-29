@@ -5,8 +5,6 @@ opencv-python==4.10.0.84
 pandas==2.2.3
 py-cpuinfo==9.0.0
 simpleaudio
-PyAudio==0.2.14
-pyttsx3==2.98
 pytz==2024.2
 PyYAML==6.0.2
 scikit-learn==1.6.0
