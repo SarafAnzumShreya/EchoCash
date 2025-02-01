@@ -1,0 +1,36 @@
+name: Deploy to Hugging Face
+
+on:
+  push:
+    branches:
+      - main  # Runs on push to main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Set up Hugging Face token
+        run: echo "HF_TOKEN=${{ secrets.HFDEPLOYTOKEN }}" >> $GITHUB_ENV  # Load token into environment
+
+      - name: Push to Hugging Face
+        run: |
+          git clone https://huggingface.co/spaces/SarafAnzumShreya/EchoCash
+          cd EchoCash  # Make sure to enter the correct directory for your Hugging Face space
+          
+          # Sync your local changes to Hugging Face space
+          rsync -av --exclude='.git' ../ .
+          
+          # Set user information for Git commit
+          git config --global user.email "sasshreya2001@gmail.com"
+          git config --global user.name "SarafAnzumShreya"
+          
+          # Stage and commit changes
+          git add .
+          git commit -m "Auto-deploy from GitHub"
+          
+          # Push to Hugging Face using the token stored in the GitHub secret
+          git push https://$HF_TOKEN@huggingface.co/spaces/SarafAnzumShreya/EchoCash main
