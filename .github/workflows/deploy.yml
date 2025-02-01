@@ -30,7 +30,6 @@ jobs:
           git config --global user.email "sasshreya2001@gmail.com"
           git config --global user.name "SarafAnzumShreya"
           
-          # Stage and commit changes
           git add .
           git commit -m "Auto-deploy from GitHub"
           
