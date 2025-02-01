@@ -30,8 +30,5 @@ jobs:
           git config --global user.email "sasshreya2001@gmail.com"
           git config --global user.name "SarafAnzumShreya"
           
-          git add.
-          git commit -m "Auto-deploy from GitHub"
-          
           # Push changes to Hugging Face
           git push --force https://SarafAnzumShreya:$HF_TOKEN@huggingface.co/spaces/SarafAnzumShreya/EchoCash main
