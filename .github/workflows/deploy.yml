@@ -34,4 +34,4 @@ jobs:
           git commit -m "Auto-deploy from GitHub"
           
           # Push changes to Hugging Face
-          git push https://SarafAnzumShreya:$HF_TOKEN@huggingface.co/spaces/SarafAnzumShreya/EchoCash main
+          git push --force https://SarafAnzumShreya:$HF_TOKEN@huggingface.co/spaces/SarafAnzumShreya/EchoCash main
