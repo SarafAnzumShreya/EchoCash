@@ -1,5 +1,7 @@
 Flask==3.1.0
 numpy
+onnx 
+onnxruntime
 gunicorn==20.1.0
 opencv-python==4.10.0.84
 pyttsx3==2.98
