@@ -10,6 +10,7 @@ async function loadModel() {
     
     // Load the model with .param and .bin files
     const model = await ncnn.loadModel('best_model.param', 'best_model.bin');
+
     console.log("NCNN model loaded!");
     return model;
 }
