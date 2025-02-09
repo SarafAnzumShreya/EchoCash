@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="static/js/script.js"></script>
-
     <title>Currency Detection</title>
     <style>
         body {
@@ -37,7 +35,9 @@
         <canvas id="canvas" width="640" height="480"></canvas>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web"></script>
+    <!-- Link to NCNN WebAssembly -->
+    <script src="https://cdn.jsdelivr.net/npm/ncnn-wasm@1.0.0/ncnn.js"></script>
+
     <script>
         const video = document.getElementById("video");
         const canvas = document.getElementById("canvas");
@@ -46,19 +46,24 @@
         let lastSpokenTime = 0;
         const SPEAK_INTERVAL = 2000; // 2 seconds
 
+        // Initialize NCNN model
         async function loadModel() {
-            const session = await onnxruntime.InferenceSession.create("best_model.onnx");
-            console.log("ONNX model loaded!");
+            // Initialize the WebAssembly version of NCNN
+            await ncnn.initWasm();  // Initialize WebAssembly
+
+            // Load the model with .param and .bin files
+            const model = await ncnn.loadModel('best_model.param', 'best_model.bin');
+            console.log("NCNN model loaded!");
 
             async function detectCurrency() {
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 
-                // Convert image data to tensor
-                const inputTensor = new ort.Tensor("float32", new Float32Array(imageData.data), [1, 3, 640, 480]);
+                // Convert image data to tensor for NCNN
+                const inputTensor = new ncnn.Tensor(imageData.data, [1, 3, 640, 480]);
 
                 // Run model
-                const results = await session.run({ input: inputTensor });
+                const results = await model.detect(inputTensor);
 
                 // Process results
                 processResults(results);
@@ -69,10 +74,9 @@
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
                 let detectedLabel = null;
-                if (results.output) {
-                    const boxes = results.output.data;
-                    for (let i = 0; i < boxes.length; i += 6) {
-                        const [x, y, w, h, conf, classId] = boxes.slice(i, i + 6);
+                if (results && results.length > 0) {
+                    results.forEach((box) => {
+                        const [x, y, w, h, conf, classId] = box;
                         if (conf > 0.5) {
                             detectedLabel = `Currency ${classId}`;
                             ctx.strokeStyle = "red";
@@ -81,7 +85,7 @@
                             ctx.fillStyle = "red";
                             ctx.fillText(detectedLabel, x, y - 5);
                         }
-                    }
+                    });
                 }
 
                 // Speak detected label with a delay to avoid repeating
@@ -109,6 +113,7 @@
             setInterval(detectCurrency, 1000);
         }
 
+        // Start capturing video from the webcam
         async function setupCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
