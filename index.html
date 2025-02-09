@@ -17,12 +17,14 @@
             margin: 20px 0;
         }
         .video-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            position: relative;
+            width: 640px;
+            height: 480px;
         }
-        video {
-            border: 2px solid #333;
+        video, canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
         }
     </style>
 </head>
@@ -30,9 +32,92 @@
     <h1>Currency Detection</h1>
     <div class="video-container">
         <video id="video" width="640" height="480" autoplay></video>
+        <canvas id="canvas" width="640" height="480"></canvas>
     </div>
 
-    <script src="ncnn.js"></script> <!-- WebAssembly library -->
-    <script src="static/js/script.js"></script> <!-- JavaScript to handle model inference -->
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web"></script>
+    <script>
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        let lastSpokenLabel = "";
+        let lastSpokenTime = 0;
+        const SPEAK_INTERVAL = 2000; // 2 seconds
+
+        async function loadModel() {
+            const session = await onnxruntime.InferenceSession.create("best_model.onnx");
+            console.log("ONNX model loaded!");
+
+            async function detectCurrency() {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                // Convert image data to tensor
+                const inputTensor = new ort.Tensor("float32", new Float32Array(imageData.data), [1, 3, 640, 480]);
+
+                // Run model
+                const results = await session.run({ input: inputTensor });
+
+                // Process results
+                processResults(results);
+            }
+
+            function processResults(results) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                let detectedLabel = null;
+                if (results.output) {
+                    const boxes = results.output.data;
+                    for (let i = 0; i < boxes.length; i += 6) {
+                        const [x, y, w, h, conf, classId] = boxes.slice(i, i + 6);
+                        if (conf > 0.5) {
+                            detectedLabel = `Currency ${classId}`;
+                            ctx.strokeStyle = "red";
+                            ctx.lineWidth = 2;
+                            ctx.strokeRect(x, y, w, h);
+                            ctx.fillStyle = "red";
+                            ctx.fillText(detectedLabel, x, y - 5);
+                        }
+                    }
+                }
+
+                // Speak detected label with a delay to avoid repeating
+                if (detectedLabel && shouldSpeak(detectedLabel)) {
+                    speak(detectedLabel);
+                }
+            }
+
+            function shouldSpeak(label) {
+                const currentTime = Date.now();
+                if (label !== lastSpokenLabel || currentTime - lastSpokenTime > SPEAK_INTERVAL) {
+                    lastSpokenLabel = label;
+                    lastSpokenTime = currentTime;
+                    return true;
+                }
+                return false;
+            }
+
+            function speak(text) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                speechSynthesis.speak(utterance);
+                console.log(`Spoken: ${text}`);
+            }
+
+            setInterval(detectCurrency, 1000);
+        }
+
+        async function setupCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+            } catch (error) {
+                console.error("Error accessing webcam:", error);
+            }
+        }
+
+        setupCamera();
+        loadModel();
+    </script>
 </body>
 </html>
