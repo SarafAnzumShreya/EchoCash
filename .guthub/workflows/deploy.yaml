@@ -1,0 +1,46 @@
+name: build-and-deploy
+on:
+  push:
+    branches:
+      - master
+
+env:
+  EMSCRIPTEN_VERSION: 3.1.28
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    # Set up Emscripten to compile WebAssembly
+    - name: Install Emscripten
+      run: |
+        git clone https://github.com/emscripten-core/emsdk.git
+        cd emsdk
+        ./emsdk install $EMSCRIPTEN_VERSION
+        ./emsdk activate $EMSCRIPTEN_VERSION
+
+    # Build your ONNX model for WebAssembly (using ONNX.js or another tool)
+    - name: Build ONNX model for WebAssembly
+      run: |
+        # (If necessary) Convert the ONNX model to WebAssembly using ONNX.js or similar tools
+        # Place this step according to your needs
+
+    # Collect the necessary files for deployment
+    - name: Collect deploy files
+      run: |
+        mkdir deploy && cd deploy
+        cp ../index.html .  # Include your HTML file
+        cp ../best_model.onnx .  # Include your ONNX model
+        cp ../*.js .  # Include the JS files (e.g., ONNX.js, etc.)
+        cp ../*.wasm .  # Include WebAssembly binary if applicable
+
+    # Deploy to GitHub Pages
+    - name: Deploy to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@4.1.1
+      with:
+        branch: gh-pages
+        folder: deploy
+        single-commit: true
