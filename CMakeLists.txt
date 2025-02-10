@@ -19,6 +19,9 @@ set(EXPORT_NAME "EchoCash")
 # Add source files
 add_executable(echocash main.cpp)
 
+# Preload files from the assets directory
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --preload-file ${CMAKE_CURRENT_SOURCE_DIR}/assets@.")
+
 # Link necessary libraries (note that the flags are no longer passed as libraries)
 target_link_libraries(echocash PRIVATE)
 
