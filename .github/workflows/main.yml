@@ -49,8 +49,8 @@ jobs:
         cp static/js/script.js deploy/
 
     - name: Deploy to GitHub Pages
-      uses: JamesIves/github-pages-deploy-action@4.1.1
-      with:
-        branch: gh-pages
-        folder: deploy
-        single-commit: true
+        uses: JamesIves/github-pages-deploy-action@4.1.1
+        with:
+          branch: gh-pages  # The branch to deploy to
+          folder: build     # The folder to deploy
+          token: ${{ secrets.GH_TOKEN }}  # Use the secret token here
