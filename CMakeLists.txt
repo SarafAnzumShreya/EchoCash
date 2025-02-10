@@ -1,42 +1,44 @@
-# Minimum version of CMake required
 cmake_minimum_required(VERSION 3.10)
 
-# Project name
-project(EchoCash)
+# Project name and version
+project(CurrencyDetection VERSION 1.0)
 
-# Set the C++ standard
+# Set the C++ standard to 11 (or higher if needed)
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Check if Emscripten is being used
+# Emscripten-specific settings
 if(EMSCRIPTEN)
-
-    # Set the CMake flags for building with Emscripten
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_PTHREADS=1 -s WASM=1 -s MODULARIZE=1 -s EXPORT_NAME='createEchoCash'")
+    # Set the output suffix to .html for a web application
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1 -s DISABLE_EXCEPTION_CATCHING=0")
+    
+    # Specify the export name and enable modularization
+    set(EXPORT_NAME "createEchoCash")
+    set(MODULARIZE 1)
 
-    # Define output directory for wasm files
-    set(OUTPUT_DIR ${CMAKE_BINARY_DIR}/deploy)
+    # Enable WebAssembly and memory growth for better performance
+    set(WASM_FLAGS "-s MODULARIZE=1 -s EXPORT_NAME=${EXPORT_NAME} -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s USE_PTHREADS=1 -s 'EXTRA_EXPORTED_RUNTIME_METHODS=[\"ccall\", \"cwrap\"]'")
 
-    # Ensure deployment directory exists
-    file(MAKE_DIRECTORY ${OUTPUT_DIR})
+    # Include the directories for the Emscripten toolchain
+    include_directories(${EMSCRIPTEN_INCLUDE_DIRS})
+    
+    # Link Emscripten libraries
+    link_directories(${EMSCRIPTEN_LIBRARY_DIRS})
 
+    # Set the output directory for the WebAssembly files
+    set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
+
+    # Add the source files (main.cpp and other necessary files)
+    add_executable(CurrencyDetection main.cpp)
+
+    # Link Emscripten settings and libraries
+    target_link_libraries(CurrencyDetection PRIVATE ${WASM_FLAGS})
 endif()
 
-# Add source directory
-include_directories(${CMAKE_SOURCE_DIR}/src)
+# Standard CMake settings for non-Emscripten environments (optional)
+if(NOT EMSCRIPTEN)
+    add_executable(CurrencyDetection main.cpp)
+endif()
 
-# Add the executable
-add_executable(echocash main.cpp)
-
-# Specify any libraries you need to link against
-# target_link_libraries(echocash <libraries>)
-
-# After defining the target, add the custom command
-add_custom_command(TARGET echocash POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:echocash> ${OUTPUT_DIR}/echocash.js
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src ${OUTPUT_DIR}/src
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/index.html ${OUTPUT_DIR}/index.html
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/style.css ${OUTPUT_DIR}/style.css
-)
+# For building with specific flags or libraries
+# target_link_libraries(CurrencyDetection <your-libraries>)
