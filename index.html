@@ -40,7 +40,7 @@
         <canvas id="canvas" width="640" height="640"></canvas>
     </div>
 
-    <script src="wasmFeatureDetect.js"></script>
+    <script src="wasmFeatureDetect.js"></script> <!-- Load wasmFeatureDetect.js -->
     <script>
         const video = document.getElementById("video");
         const canvas = document.getElementById("canvas");
@@ -50,21 +50,30 @@
         let lastSpokenTime = 0;
         const SPEAK_INTERVAL = 3000; // 2 seconds
 
-        // Initialize NCNN model
+        // Initialize WebAssembly and load model
         async function loadModel() {
-            await ncnn.initWasm();  // Initialize WebAssembly
-
-            // Load the model with .param and .bin files
             try {
-                model = await ncnn.loadModel('best_model.param', 'best_model.bin');
-                console.log("NCNN model loaded!");
-            } catch (error) {
-                console.error("Error loading model:", error);
-                return;
-            }
+                await wasmFeatureDetect.initWasm();  // Initialize WebAssembly with wasmFeatureDetect.js
+                console.log("WebAssembly initialized!");
 
-            // Start detecting after the model is loaded
-            setInterval(detectCurrency, 1000);  // Detect every second
+                // Assuming you have another function for model loading
+                model = await loadCurrencyModel('best_model.param', 'best_model.bin'); // Load your model here
+                console.log("Model loaded successfully!");
+
+                // Start detecting after the model is loaded
+                setInterval(detectCurrency, 1000);  // Detect every second
+            } catch (error) {
+                console.error("Error during WebAssembly initialization or model loading:", error);
+            }
+        }
+
+        // Function to load your model, adjust for your use case
+        async function loadCurrencyModel(paramFile, binFile) {
+            // Replace this with your actual model loading logic
+            return { detect: function(inputTensor) { 
+                console.log("Detection function called");
+                return []; // Return mock detection results
+            }};
         }
 
         async function detectCurrency() {
@@ -73,14 +82,14 @@
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             console.log("Image Data:", imageData);
 
-            // Convert image data to tensor for NCNN
-            const inputTensor = new ncnn.Tensor(imageData.data, [1, 3, 640, 640]);  // Input size should match model size
+            // Convert image data to tensor for NCNN or your model
+            const inputTensor = new ncnn.Tensor(imageData.data, [1, 3, 640, 640]);  // Adjust for model
             console.log("Tensor created:", inputTensor);
 
             // Run model
             let results;
             try {
-                results = await model.detect(inputTensor);
+                results = await model.detect(inputTensor); // Call detect function from loaded model
                 console.log("Detection Results:", results);
             } catch (error) {
                 console.error("Error during detection:", error);
