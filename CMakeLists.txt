@@ -1,44 +1,29 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.0)
 
-# Project name and version
-project(CurrencyDetection VERSION 1.0)
+project(EchoCash)
 
-# Set the C++ standard to 11 (or higher if needed)
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Emscripten-specific settings
-if(EMSCRIPTEN)
-    # Set the output suffix to .html for a web application
-    set(CMAKE_EXECUTABLE_SUFFIX ".html")
-    
-    # Specify the export name and enable modularization
-    set(EXPORT_NAME "createEchoCash")
-    set(MODULARIZE 1)
+# WebAssembly specific settings
+set(CMAKE_TOOLCHAIN_FILE /home/runner/work/EchoCash/EchoCash/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake)
 
-    # Enable WebAssembly and memory growth for better performance
-    set(WASM_FLAGS "-s MODULARIZE=1 -s EXPORT_NAME=${EXPORT_NAME} -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s USE_PTHREADS=1 -s 'EXTRA_EXPORTED_RUNTIME_METHODS=[\"ccall\", \"cwrap\"]'")
+# Enable Pthreads support for WebAssembly
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
-    # Include the directories for the Emscripten toolchain
-    include_directories(${EMSCRIPTEN_INCLUDE_DIRS})
-    
-    # Link Emscripten libraries
-    link_directories(${EMSCRIPTEN_LIBRARY_DIRS})
+# Set the name for the export module (required when using MODULARIZE with Pthreads)
+set(EXPORT_NAME "EchoCash")
 
-    # Set the output directory for the WebAssembly files
-    set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
+# Add source files
+add_executable(echocash main.cpp)
 
-    # Add the source files (main.cpp and other necessary files)
-    add_executable(CurrencyDetection main.cpp)
+# Link to necessary libraries
+target_link_libraries(echocash PRIVATE -s USE_PTHREADS=1 -s EXPORT_NAME=${EXPORT_NAME} -s ALLOW_MEMORY_GROWTH=1)
 
-    # Link Emscripten settings and libraries
-    target_link_libraries(CurrencyDetection PRIVATE ${WASM_FLAGS})
-endif()
+# If you have other required dependencies, link them here
+# target_link_libraries(echocash PRIVATE other-libraries)
 
-# Standard CMake settings for non-Emscripten environments (optional)
-if(NOT EMSCRIPTEN)
-    add_executable(CurrencyDetection main.cpp)
-endif()
+# Set output folder
+set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
 
-# For building with specific flags or libraries
-# target_link_libraries(CurrencyDetection <your-libraries>)
+# Optionally, install the generated files if needed
+# install(TARGETS echocash DESTINATION /usr/local/bin)
