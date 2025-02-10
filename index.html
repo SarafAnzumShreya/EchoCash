@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/gh/nihui/ncnn-webassembly-yolov5@ncnn.js"></script>
-
     <title>Currency Detection</title>
     <style>
         body {
@@ -41,6 +40,11 @@
     <script src="https://cdn.jsdelivr.net/npm/ncnn-wasm@1.0.0/ncnn.js"></script>
 
     <script>
+        // Initialize the module with the correct export name
+        var createEchoCash = Module({
+            // You can pass any necessary configurations here if needed
+        });
+
         const video = document.getElementById("video");
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
