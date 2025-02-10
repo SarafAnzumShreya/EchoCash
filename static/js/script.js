@@ -1,21 +1,16 @@
 let video = document.getElementById('video');
-let canvas = document.createElement('canvas');
+let canvas = document.getElementById('canvas');
 let context = canvas.getContext('2d');
-document.body.appendChild(canvas);
 
-// Initialize NCNN model
 async function loadModel() {
-    // Initialize the WebAssembly version of NCNN
     await ncnn.initWasm();  // Initialize WebAssembly
     
     // Load the model with .param and .bin files
-    const model = await ncnn.loadModel('best_model.param', 'best_model.bin');
-
+    const model = await ncnn.loadModel('assets/best_model.param', 'assets/best_model.bin');
     console.log("NCNN model loaded!");
     return model;
 }
 
-// Start capturing video from the webcam
 navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
     video.srcObject = stream;
     video.onloadedmetadata = () => {
@@ -24,7 +19,6 @@ navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
     };
 });
 
-// Process each frame captured from the webcam
 async function processFrame(model) {
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
@@ -45,7 +39,6 @@ async function processFrame(model) {
     requestAnimationFrame(() => processFrame(model)); // Keep processing frames
 }
 
-// Load the model and start processing the webcam feed
 loadModel().then((model) => {
     processFrame(model);
 });
