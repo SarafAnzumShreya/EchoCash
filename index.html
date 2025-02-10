@@ -45,86 +45,79 @@
     <script src="https://cdn.jsdelivr.net/npm/ncnn-wasm@1.0.0/ncnn.js"></script>
 
     <script>
-        // Initialize the module with the correct export name
-        var createEchoCash = Module({
-            onRuntimeInitialized: function() {
-                console.log("Emscripten module initialized!");
-                loadModel();
-            }
-        });
-
         const video = document.getElementById("video");
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
+        let model = null;
         let lastSpokenLabel = "";
         let lastSpokenTime = 0;
         const SPEAK_INTERVAL = 2000; // 2 seconds
 
         // Initialize NCNN model
         async function loadModel() {
-            // Initialize the WebAssembly version of NCNN
             await ncnn.initWasm();  // Initialize WebAssembly
-
+            
             // Load the model with .param and .bin files
-            const model = await ncnn.loadModel('best_model.param', 'best_model.bin');
+            model = await ncnn.loadModel('best_model.param', 'best_model.bin');
             console.log("NCNN model loaded!");
 
-            async function detectCurrency() {
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                
-                // Convert image data to tensor for NCNN
-                const inputTensor = new ncnn.Tensor(imageData.data, [1, 3, 640, 480]);
+            // Start detecting after the model is loaded
+            setInterval(detectCurrency, 1000);  // Detect every second
+        }
 
-                // Run model
-                const results = await model.detect(inputTensor);
+        async function detectCurrency() {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-                // Process results
-                processResults(results);
+            // Convert image data to tensor for NCNN
+            const inputTensor = new ncnn.Tensor(imageData.data, [1, 3, 640, 480]);
+
+            // Run model
+            const results = await model.detect(inputTensor);
+
+            // Process results
+            processResults(results);
+        }
+
+        function processResults(results) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            let detectedLabel = null;
+            if (results && results.length > 0) {
+                results.forEach((box) => {
+                    const [x, y, w, h, conf, classId] = box;
+                    if (conf > 0.5) {
+                        detectedLabel = `Currency ${classId}`;
+                        ctx.strokeStyle = "red";
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(x, y, w, h);
+                        ctx.fillStyle = "red";
+                        ctx.fillText(detectedLabel, x, y - 5);
+                    }
+                });
             }
 
-            function processResults(results) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                let detectedLabel = null;
-                if (results && results.length > 0) {
-                    results.forEach((box) => {
-                        const [x, y, w, h, conf, classId] = box;
-                        if (conf > 0.5) {
-                            detectedLabel = `Currency ${classId}`;
-                            ctx.strokeStyle = "red";
-                            ctx.lineWidth = 2;
-                            ctx.strokeRect(x, y, w, h);
-                            ctx.fillStyle = "red";
-                            ctx.fillText(detectedLabel, x, y - 5);
-                        }
-                    });
-                }
-
-                // Speak detected label with a delay to avoid repeating
-                if (detectedLabel && shouldSpeak(detectedLabel)) {
-                    speak(detectedLabel);
-                }
+            // Speak detected label with a delay to avoid repeating
+            if (detectedLabel && shouldSpeak(detectedLabel)) {
+                speak(detectedLabel);
             }
+        }
 
-            function shouldSpeak(label) {
-                const currentTime = Date.now();
-                if (label !== lastSpokenLabel || currentTime - lastSpokenTime > SPEAK_INTERVAL) {
-                    lastSpokenLabel = label;
-                    lastSpokenTime = currentTime;
-                    return true;
-                }
-                return false;
+        function shouldSpeak(label) {
+            const currentTime = Date.now();
+            if (label !== lastSpokenLabel || currentTime - lastSpokenTime > SPEAK_INTERVAL) {
+                lastSpokenLabel = label;
+                lastSpokenTime = currentTime;
+                return true;
             }
+            return false;
+        }
 
-            function speak(text) {
-                const utterance = new SpeechSynthesisUtterance(text);
-                speechSynthesis.speak(utterance);
-                console.log(`Spoken: ${text}`);
-            }
-
-            setInterval(detectCurrency, 1000);
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            speechSynthesis.speak(utterance);
+            console.log(`Spoken: ${text}`);
         }
 
         // Start capturing video from the webcam
@@ -137,7 +130,13 @@
             }
         }
 
-        setupCamera();
+        // Initialize everything
+        async function init() {
+            setupCamera();
+            loadModel();  // Load the model after setting up the camera
+        }
+
+        init();
     </script>
 </body>
 </html>
