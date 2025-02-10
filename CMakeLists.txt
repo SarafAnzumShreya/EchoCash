@@ -22,14 +22,6 @@ if(EMSCRIPTEN)
     # Ensure deployment directory exists
     file(MAKE_DIRECTORY ${OUTPUT_DIR})
 
-    # Copy necessary files for deployment
-    add_custom_command(TARGET echocash POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:echocash> ${OUTPUT_DIR}/echocash.js
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src ${OUTPUT_DIR}/src
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/index.html ${OUTPUT_DIR}/index.html
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/style.css ${OUTPUT_DIR}/style.css
-    )
-
 endif()
 
 # Add source directory
@@ -40,3 +32,11 @@ add_executable(echocash main.cpp)
 
 # Specify any libraries you need to link against
 # target_link_libraries(echocash <libraries>)
+
+# After defining the target, add the custom command
+add_custom_command(TARGET echocash POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:echocash> ${OUTPUT_DIR}/echocash.js
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src ${OUTPUT_DIR}/src
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/index.html ${OUTPUT_DIR}/index.html
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/style.css ${OUTPUT_DIR}/style.css
+)
