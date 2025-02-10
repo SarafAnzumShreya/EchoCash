@@ -42,7 +42,10 @@
     <script>
         // Initialize the module with the correct export name
         var createEchoCash = Module({
-            // You can pass any necessary configurations here if needed
+            onRuntimeInitialized: function() {
+                console.log("Emscripten module initialized!");
+                loadModel();
+            }
         });
 
         const video = document.getElementById("video");
@@ -130,7 +133,6 @@
         }
 
         setupCamera();
-        loadModel();
     </script>
 </body>
 </html>
