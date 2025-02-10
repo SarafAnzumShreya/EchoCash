@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.jsdelivr.net/gh/nihui/ncnn-webassembly-yolov5@ncnn.js"></script>
     <title>Currency Detection</title>
     <style>
         body {
@@ -41,9 +40,7 @@
         <canvas id="canvas" width="640" height="640"></canvas>
     </div>
 
-    <!-- Link to NCNN WebAssembly -->
-    <script src="https://cdn.jsdelivr.net/npm/ncnn-wasm@1.0.0/ncnn.js"></script>
-
+    <script src="wasmFeatureDetect.js"></script>
     <script>
         const video = document.getElementById("video");
         const canvas = document.getElementById("canvas");
