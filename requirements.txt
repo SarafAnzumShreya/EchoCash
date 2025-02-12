@@ -1,12 +1,10 @@
 Flask==3.1.0
 numpy
-onnx 
-onnxruntime
-gunicorn==20.1.0
 opencv-python==4.10.0.84
-pyttsx3==2.98
-PyYAML==6.0.2
 torch==2.5.1
 torchvision==0.20.1
-tqdm==4.67.1
 ultralytics==8.3.51
+Flask-SocketIO==5.3.6
+python-socketio==5.8.0
+eventlet==0.33.3
+pyyaml==6.0.1
