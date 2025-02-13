@@ -1,4 +1,4 @@
-var socket = io.connect("wss://0b5a-123-136-25-129.ngrok-free.app");
+var socket = io.connect("wss://2068-123-136-25-129.ngrok-free.app");
 var video = document.getElementById("videoElement");
 var canvas = document.getElementById("videoCanvas");
 var ctx = canvas.getContext("2d");
@@ -63,8 +63,8 @@ async function startCamera() {
 function captureFrame() {
     if (video.readyState === 4 && capturing) {
         // Set canvas size to a smaller resolution
-        canvas.width = 255;
-        canvas.height = 255;
+        canvas.width = 370;
+        canvas.height = 370;
 
         // Draw the video frame onto the canvas
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
