@@ -1,5 +1,4 @@
 Flask==3.1.0
-gunicorn
 numpy
 opencv-python==4.10.0.84
 torch==2.5.1
