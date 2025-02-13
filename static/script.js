@@ -1,4 +1,4 @@
-var socket = io.connect("wss://currency-detection-ckma.onrender.com");
+var socket = io.connect("wss://0b5a-123-136-25-129.ngrok-free.app");
 var video = document.getElementById("videoElement");
 var canvas = document.getElementById("videoCanvas");
 var ctx = canvas.getContext("2d");
