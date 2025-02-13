@@ -1,4 +1,4 @@
-# EchoCash
+# <p align="center">EchoCash</p>
 
 <p align="center">
   <img src="static/logo.jpg" alt="EchoCash Logo" style="width: 100px; height: auto;"/>
@@ -45,7 +45,7 @@ This project is designed to be used on a mobile phone with a laptop/computer act
 
 
 <p align="center">
-  <img src="static/example.jpg" alt="Example" style="width: 200px; height: auto;"/>
+  <img src="static/example.jpg" alt="Example" style="width: 250px; height: auto;"/>
 </p>
 
 Enjoy using EchoCash and help visually impaired people easily detect currency!
