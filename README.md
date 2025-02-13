@@ -1,4 +1,4 @@
-# <p align="center">EchoCash</p>
+# <p align="center"><strong>EchoCash</strong></p>
 
 <p align="center">
   <img src="static/logo.jpg" alt="EchoCash Logo" style="width: 100px; height: auto;"/>
@@ -6,11 +6,11 @@
 
 EchoCash is a machine learning project designed to assist visually impaired people by detecting currency. It can recognize USD, EURO, and BDT. Trained using YOLO along with convolution layers, it achieves a precision of 98.61%.
 
-### How to Use This Model
+## How to Use This Model
 
 This project is designed to be used on a mobile phone with a laptop/computer acting as the local server.
 
-#### Steps to Set Up:
+### Steps to Set Up:
 
 1. **Download the Project**  
    Download the EchoCash project to your laptop/computer.
@@ -41,11 +41,11 @@ This project is designed to be used on a mobile phone with a laptop/computer act
 7. **Start Detecting!**  
    - The app should now be ready to detect currency! Point your phone camera at the currency, and the app will provide feedback.
 
-#### Example Image
+### Example Image
 
 
 <p align="center">
-  <img src="static/example.jpg" alt="Example" style="width: 250px; height: auto;"/>
+  <img src="static/example.jpg" alt="Example" style="width: 300px; height: auto;"/>
 </p>
 
 Enjoy using EchoCash and help visually impaired people easily detect currency!
