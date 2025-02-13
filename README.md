@@ -1,27 +1,47 @@
-
 # EchoCash
-<img
-src="/static/logo.jpg"
-raw=true
-alt="Subject Pronouns"
-style="margin-right: 10px";
-/>
-A machine learning project to assist visually imapraired people to detect currency. It can detect USD, EURO and BDT. Trained with YOLO + convolution layers achieving precision of 98.61%
 
-### How to use this model
-This project is dsigned to use it on phone and using laptop/computer as local server.
+![EchoCash Logo](static/logo.jpg)
 
-1. Download the project on you laptop.
-2. Run ngrok.exe 
-3. Paste "**ngrok http 5000**" and run on ngrok.exe
-4. Take the "**https://**********.ngrok-free.app**" from it and replace the pre-existing line "**var socket = io.connect("wss://**********.ngrok-free.app");**" on static/script.js with your new address.
-5. Run the server.py file on laptop/computer.
-6. Visit the address you got "**https://**********.ngrok-free.app**" from phone. 
-7. Start detecting!
+EchoCash is a machine learning project designed to assist visually impaired people by detecting currency. It can recognize USD, EURO, and BDT. Trained using YOLO along with convolution layers, it achieves a precision of 98.61%.
 
-<img
-src="/static/example.jpg"
-raw=true
-alt="Subject Pronouns"
-style="margin-right: 10px";
-/>
+### How to Use This Model
+
+This project is designed to be used on a mobile phone with a laptop/computer acting as the local server.
+
+#### Steps to Set Up:
+
+1. **Download the Project**  
+   Download the EchoCash project to your laptop/computer.
+
+2. **Run ngrok.exe**  
+   - Launch `ngrok.exe` on your laptop/computer.
+   - Run the following command in your terminal:  
+     `ngrok http 5000`
+
+3. **Get Your ngrok URL**  
+   - After running the command, ngrok will provide a URL. It will look something like:  
+     `https://**********.ngrok-free.app`
+   - Copy this URL.
+
+4. **Update WebSocket Address**  
+   - Open `static/script.js` on your laptop/computer.
+   - Replace the existing WebSocket connection line:  
+     `var socket = io.connect("wss://**********.ngrok-free.app");`  
+     with the URL you got from ngrok (e.g., `wss://**********.ngrok-free.app`).
+
+5. **Run the Server**  
+   - Run the `server.py` file on your laptop/computer. This will start the backend server that handles object detection.
+
+6. **Visit the URL on Your Phone**  
+   - On your phone, open a browser and navigate to the ngrok URL you copied:  
+     `https://**********.ngrok-free.app`
+
+7. **Start Detecting!**  
+   - The app should now be ready to detect currency! Point your phone camera at the currency, and the app will provide feedback.
+
+#### Example Image
+
+![Example](static/example.jpg)
+
+Enjoy using EchoCash and help visually impaired people easily detect currency!
+
