@@ -77,7 +77,7 @@ function captureFrame() {
         
         socket.emit("frame", imageData);
     }
-    setTimeout(() => requestAnimationFrame(captureFrame), 250); // Throttle to 4 frame per second
+    setTimeout(() => requestAnimationFrame(captureFrame), 100); // Throttle to 4 frame per second
 }
 
 // This function can be triggered by a user event to ensure speech synthesis works.
