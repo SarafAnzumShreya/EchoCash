@@ -1,14 +1,14 @@
-var socket = io.connect("wss://2068-123-136-25-129.ngrok-free.app");
+var socket = io.connect("wss://3181-103-60-161-118.ngrok-free.app");
 var video = document.getElementById("videoElement");
 var canvas = document.getElementById("videoCanvas");
 var ctx = canvas.getContext("2d");
 
 var capturing = true;
-var videoStream = null;  // To store video stream
+var videoStream = null;
+var tapCount = 0;
+var lastTapTime = 0;
+var TAP_TIMEOUT = 500; // 500ms window for multi-tap detection
 
-var isUserInteracted = false; // To track user interaction
-
-// Play silent audio to unlock audio playback
 function unlockAudio() {
     const silentAudio = document.getElementById("silentAudio");
     silentAudio.play().then(() => {
@@ -18,32 +18,11 @@ function unlockAudio() {
     });
 }
 
-// Call unlockAudio on page load
 window.onload = function() {
     unlockAudio();
-    startCamera(); // Start the camera as usual
+    startCamera();
 };
 
-// Trigger speech synthesis on any user interaction (e.g., touch/click)
-document.body.addEventListener('click', function() {
-    isUserInteracted = true;
-});
-
-async function requestMicrophonePermission() {
-    try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-        console.log("Microphone access granted.");
-    } catch (err) {
-        console.error("Microphone access denied:", err);
-        alert("Microphone permission is required for speech feedback.");
-    }
-}
-
-// Request microphone permission before starting the camera
-requestMicrophonePermission();
-
-
-// Adjusted to ensure camera permissions are requested properly
 async function startCamera() {
     try {
         videoStream = await navigator.mediaDevices.getUserMedia({
@@ -51,91 +30,131 @@ async function startCamera() {
         });
         console.log("Camera access granted");
         video.srcObject = videoStream;
-        video.play(); // Ensure video is playing
-        captureFrame(); // Start sending frames to server
+        video.play();
+        captureFrame();
     } catch (error) {
         console.error("Error accessing camera: ", error);
-        alert("Camera access is required. Please enable camera permissions in your browser.");
+        alert("Camera access is required. Please enable camera permissions.");
     }
 }
 
-// Capture video frames and send them to the server
 function captureFrame() {
     if (video.readyState === 4 && capturing) {
-        // Set canvas size to a smaller resolution
         canvas.width = 370;
         canvas.height = 370;
-
-        // Draw the video frame onto the canvas
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        // Convert canvas frame to base64 for transmission
         let imageData = canvas.toDataURL("image/jpeg").split(",")[1];
-        
-        // Log the image data to the console to check if it's being generated correctly
-        console.log("Sending frame to server: ", imageData);
-        
+        console.log("Sending frame to server");
         socket.emit("frame", imageData);
     }
-    setTimeout(() => requestAnimationFrame(captureFrame), 100); // Throttle to 4 frame per second
+    setTimeout(() => requestAnimationFrame(captureFrame), 250); // 4 frames per second 
 }
 
-// This function can be triggered by a user event to ensure speech synthesis works.
 function speakDetectedCurrency(label) {
     var synth = window.speechSynthesis;
-    var utterance = new SpeechSynthesisUtterance(label);
-    
-    // Check if the speech synthesis is supported
-    if ('speechSynthesis' in window) {
-        synth.speak(utterance);
-    } else {
+    if (!synth) {
         console.error("Speech synthesis not supported on this device.");
+        return;
+    }
+    var utterance = new SpeechSynthesisUtterance(label);
+    const voices = synth.getVoices();
+    if (voices.length === 0) {
+        console.warn("No voices available yet, waiting for voiceschanged event");
+        synth.onvoiceschanged = () => {
+            const loadedVoices = synth.getVoices();
+            const femaleVoice = loadedVoices.find(voice => 
+                voice.lang.includes("en") && voice.name.toLowerCase().includes("female")) || 
+                loadedVoices.find(voice => voice.lang.includes("en"));
+            if (femaleVoice) {
+                utterance.voice = femaleVoice;
+            }
+            console.log("Speaking with voice:", utterance.voice ? utterance.voice.name : "default");
+            synth.speak(utterance);
+        };
+    } else {
+        const femaleVoice = voices.find(voice => 
+            voice.lang.includes("en") && voice.name.toLowerCase().includes("female")) || 
+            voices.find(voice => voice.lang.includes("en"));
+        if (femaleVoice) {
+            utterance.voice = femaleVoice;
+        }
+        console.log("Speaking with voice:", utterance.voice ? utterance.voice.name : "default");
+        synth.speak(utterance);
     }
 }
 
-// Modify the existing result handler
+// Tap/Click gesture handling
+document.body.addEventListener("click", function(event) {
+    const currentTime = Date.now();
+    if (currentTime - lastTapTime > TAP_TIMEOUT) {
+        tapCount = 0; // Reset if too much time has passed
+    }
+    tapCount++;
+    lastTapTime = currentTime;
+
+    setTimeout(() => {
+        if (tapCount === 2) {
+            const currentLabel = document.getElementById("result").innerText.split("Detected: ")[1];
+            console.log("Double tap detected, sending 'add' command with label:", currentLabel);
+            socket.emit("command", { command: "add", label: currentLabel });
+        } else if (tapCount === 3) {
+            console.log("Triple tap detected, sending 'cancel' command");
+            socket.emit("command", { command: "cancel", label: null });
+        }
+        tapCount = 0; // Reset after processing
+    }, TAP_TIMEOUT);
+});
+
+socket.on("connect", function() {
+    console.log("Connected to server");
+});
+
+socket.on("disconnect", function() {
+    console.log("Disconnected from server");
+});
+
 socket.on("result", function(data) {
-    console.log("Received result:", data);  // Debugging the received result
-
+    console.log("Received result:", data);
     document.getElementById("result").innerText = "Detected: " + data.label;
-
-    // Speak the detected currency if it's been detected for 3 seconds
+    updateTotals(data.totals);
     if (data.speak) {
         console.log("Attempting to speak:", data.label);
-        var synth = window.speechSynthesis;
-        var utterance = new SpeechSynthesisUtterance(data.label);
-        
-        // Check if the speech synthesis is supported
-        if ('speechSynthesis' in window) {
-            synth.speak(utterance);
-        } else {
-            console.error("Speech synthesis not supported on this device.");
-        }
+        speakDetectedCurrency(data.label);
     }
 });
 
+socket.on("total_update", function(data) {
+    console.log("Received total update:", data);
+    updateTotals(data.totals);
+});
 
-// Start camera automatically on page load
-window.onload = startCamera;
+socket.on("command_feedback", function(data) {
+    console.log("Received command feedback:", data);
+    speakDetectedCurrency(data.message); 
+});
 
-// Stop capturing frames when page is unloaded or hidden
+function updateTotals(totals) {
+    document.getElementById("total").innerText = 
+        `Totals: ${totals.taka} Taka, ${totals.dollar} USD, ${totals.euro} EUR, ${totals.eurocent} Eurocents`;
+}
+
 window.addEventListener("beforeunload", function() {
     capturing = false;
     if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());  // Stop video stream
+        videoStream.getTracks().forEach(track => track.stop());
     }
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
 
 document.addEventListener("visibilitychange", function() {
     if (document.hidden) {
-        capturing = false; // Stop capturing when page is hidden
+        capturing = false;
         if (videoStream) {
-            videoStream.getTracks().forEach(track => track.stop());  // Stop video stream
+            videoStream.getTracks().forEach(track => track.stop());
         }
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
     } else {
-        capturing = true; // Start capturing again when page is visible
-        startCamera(); // Re-start camera if needed
+        capturing = true;
+        startCamera();
     }
 });
