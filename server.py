@@ -11,11 +11,10 @@ from ultralytics import YOLO
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading', compression_threshold=1024)
 
-
 model = YOLO("best_model.pt")
 
 with open("yaml.yaml") as file:
-        label_mapping = yaml.safe_load(file)["labels"]
+    label_mapping = yaml.safe_load(file)["labels"]
 
 label_timers = {}  # Tracks time for the current label
 last_spoken_label = None  # Tracks the last label that was spoken
@@ -103,11 +102,6 @@ def detect_currency(image):
         return {"label": "Detection error", "speak": False, "totals": total_amounts}
 
 def process_frame(image_data):
-    global detection_paused
-    if detection_paused:
-        print("Detection paused, skipping frame")
-        return
-
     try:
         print("Decoding frame...")
         image_data = base64.b64decode(image_data)
@@ -133,7 +127,7 @@ def handle_frame(data):
 
 @socketio.on("command")
 def handle_command(data):
-    global total_amounts, detection_paused, last_spoken_label
+    global total_amounts, last_spoken_label
     command = data.get("command")
     detected_label = data.get("label")
     print(f"Received command: {command}, label: {detected_label}")

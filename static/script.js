@@ -1,4 +1,4 @@
-var socket = io.connect("wss://3181-103-60-161-118.ngrok-free.app");
+var socket = io.connect("wss://9d6b-103-60-161-118.ngrok-free.app");
 var video = document.getElementById("videoElement");
 var canvas = document.getElementById("videoCanvas");
 var ctx = canvas.getContext("2d");
