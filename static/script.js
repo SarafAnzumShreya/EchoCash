@@ -130,7 +130,7 @@ socket.on("total_update", function(data) {
 
 socket.on("command_feedback", function(data) {
     console.log("Received command feedback:", data);
-    speakDetectedCurrency(data.message); 
+    speakDetectedCurrency(data.message); git 
 });
 
 function updateTotals(totals) {
