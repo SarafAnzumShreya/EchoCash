@@ -46,12 +46,11 @@ Follow these steps to get EchoCash running:
    - Wait 3 seconds; if it’s a currency, you’ll hear it spoken (e.g., "100taka").
    - Double tap the screen to add it to the total, then hear the total (e.g., "the total is 100 Taka").
    - If no currency is detected, double tap to hear the current total (e.g., "the total is 0").
-   - Triple tap to reset the total to zero (you’ll hear "canceled").
+   - Triple tap to cancel the last addition.
+   - Long press to reset the total to zero (you’ll hear "canceled").
 
 ### Example Image
 
 <p align="center">
   <img src="static/example.jpg" alt="Example" style="width: 300px; height: auto;"/>
 </p>
-
-That’s it! Use EchoCash to detect and count currency easily.

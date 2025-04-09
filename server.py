@@ -16,14 +16,15 @@ model = YOLO("best_model.pt")
 with open("yaml.yaml") as file:
     label_mapping = yaml.safe_load(file)["labels"]
 
-label_timers = {}  # Tracks time for the current label
-last_spoken_label = None  # Tracks the last label that was spoken
+label_timers = {}  
+last_spoken_label = None  
 total_amounts = {
     "taka": 0,
     "dollar": 0,
     "euro": 0,
     "eurocent": 0
 }
+addition_history = []  # Tracks additions for cancel functionality
 
 currency_values = {
     "1000taka": {"value": 1000, "type": "taka"},
@@ -78,7 +79,6 @@ def detect_currency(image):
 
         current_time = time.time()
 
-        # Track all labels in label_timers, but only speak currencies
         if detected_label not in label_timers:
             label_timers.clear() 
             label_timers[detected_label] = current_time
@@ -87,8 +87,8 @@ def detect_currency(image):
             elapsed_time = current_time - label_timers[detected_label]
             if elapsed_time >= 3 and detected_label in currency_values:
                 speak = True
-                last_spoken_label = detected_label  # Update last spoken label
-                label_timers[detected_label] = current_time  # Reset timer after speaking
+                last_spoken_label = detected_label  
+                label_timers[detected_label] = current_time  
                 print(f"Speak triggered for {detected_label} after {elapsed_time:.2f}s")
             elif detected_label in currency_values:
                 print(f"Waiting for {detected_label}, elapsed: {elapsed_time:.2f}s")
@@ -127,7 +127,7 @@ def handle_frame(data):
 
 @socketio.on("command")
 def handle_command(data):
-    global total_amounts, last_spoken_label
+    global total_amounts, last_spoken_label, addition_history
     command = data.get("command")
     detected_label = data.get("label")
     print(f"Received command: {command}, label: {detected_label}")
@@ -135,11 +135,10 @@ def handle_command(data):
     if command == "add":
         if detected_label == "No currency detected":
             print("No currency detected, adding zero")
-            # No change to totals, just provide feedback
         elif last_spoken_label and last_spoken_label in currency_values and detected_label == last_spoken_label:
-            # Only add if a currency was spoken and matches current detection
             currency_info = currency_values[last_spoken_label]
             total_amounts[currency_info["type"]] += currency_info["value"]
+            addition_history.append({"label": last_spoken_label, "type": currency_info["type"], "value": currency_info["value"]})
             print(f"Added {last_spoken_label}. New totals: {total_amounts}")
         else:
             print(f"Invalid or not yet spoken label: {detected_label}, skipping add (last spoken: {last_spoken_label})")
@@ -154,18 +153,44 @@ def handle_command(data):
             feedback += f"{total_amounts['euro']} Euro, "
         if total_amounts["eurocent"] > 0:
             feedback += f"{total_amounts['eurocent']} Eurocents, "
-        feedback = feedback.rstrip(", ")  # Remove trailing comma and space
-        if feedback == "the total is":  # If all totals are zero
+        feedback = feedback.rstrip(", ")  
+        if feedback == "the total is":  
             feedback = "the total is 0"
         socketio.emit("command_feedback", {"message": feedback})
         print("Command processed, detection continues, speaking total")
+        
+        socketio.emit("total_update", {"totals": total_amounts})
+        
     elif command == "cancel":
+        if addition_history:
+            last_addition = addition_history.pop()
+            total_amounts[last_addition["type"]] -= last_addition["value"]
+            print(f"Canceled last addition: {last_addition['label']}. New totals: {total_amounts}")
+            feedback = f"{last_addition['value']} {last_addition['type']} removed and the total is "
+            if total_amounts["taka"] > 0:
+                feedback += f"{total_amounts['taka']} Taka, "
+            if total_amounts["dollar"] > 0:
+                feedback += f"{total_amounts['dollar']} USD, "
+            if total_amounts["euro"] > 0:
+                feedback += f"{total_amounts['euro']} Euro, "
+            if total_amounts["eurocent"] > 0:
+                feedback += f"{total_amounts['eurocent']} Eurocents, "
+            feedback = feedback.rstrip(", ")
+            if feedback == f"{last_addition['value']} {last_addition['type']} removed and The total is":
+                feedback += " 0"
+            socketio.emit("command_feedback", {"message": feedback})
+        else:
+            print("No additions to cancel")
+            socketio.emit("command_feedback", {"message": "Nothing to cancel"})
+            
+        socketio.emit("total_update", {"totals": total_amounts})
+        
+    elif command == "reset":
         total_amounts = {"taka": 0, "dollar": 0, "euro": 0, "eurocent": 0}
-        last_spoken_label = None  # Reset last spoken label on cancel
+        last_spoken_label = None  
+        addition_history.clear()
         print("Totals reset to zero")
         socketio.emit("command_feedback", {"message": "canceled"})
-
-    socketio.emit("total_update", {"totals": total_amounts})
 
 @app.route("/")
 def index():

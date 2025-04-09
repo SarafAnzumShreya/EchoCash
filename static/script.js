@@ -1,4 +1,4 @@
-var socket = io.connect("wss://9d6b-103-60-161-118.ngrok-free.app");
+var socket = io.connect("wss://09a3-103-60-161-118.ngrok-free.app");
 var video = document.getElementById("videoElement");
 var canvas = document.getElementById("videoCanvas");
 var ctx = canvas.getContext("2d");
@@ -8,6 +8,9 @@ var videoStream = null;
 var tapCount = 0;
 var lastTapTime = 0;
 var TAP_TIMEOUT = 500; // 500ms window for multi-tap detection
+var LONG_PRESS_TIMEOUT = 1500; // 1.5 seconds for long press detection
+var longPressTimer = null;
+var isLongPress = false;
 
 function unlockAudio() {
     const silentAudio = document.getElementById("silentAudio");
@@ -103,6 +106,37 @@ document.body.addEventListener("click", function(event) {
         }
         tapCount = 0; // Reset after processing
     }, TAP_TIMEOUT);
+});
+
+// Long press gesture handling
+document.body.addEventListener("mousedown", function(event) {
+    longPressTimer = setTimeout(() => {
+        isLongPress = true;
+        console.log("Long press detected, sending 'reset' command");
+        socket.emit("command", { command: "reset", label: null });
+    }, LONG_PRESS_TIMEOUT);
+});
+
+document.body.addEventListener("mouseup", function(event) {
+    if (!isLongPress) {
+        clearTimeout(longPressTimer);
+    }
+    isLongPress = false;
+});
+
+document.body.addEventListener("touchstart", function(event) {
+    longPressTimer = setTimeout(() => {
+        isLongPress = true;
+        console.log("Long press detected, sending 'reset' command");
+        socket.emit("command", { command: "reset", label: null });
+    }, LONG_PRESS_TIMEOUT);
+});
+
+document.body.addEventListener("touchend", function(event) {
+    if (!isLongPress) {
+        clearTimeout(longPressTimer);
+    }
+    isLongPress = false;
 });
 
 socket.on("connect", function() {
