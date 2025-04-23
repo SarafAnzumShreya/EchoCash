@@ -1,4 +1,4 @@
-var socket = io.connect("wss://09a3-103-60-161-118.ngrok-free.app");
+var socket = io.connect("wss://3341-123-136-25-129.ngrok-free.app");
 var video = document.getElementById("videoElement");
 var canvas = document.getElementById("videoCanvas");
 var ctx = canvas.getContext("2d");
@@ -22,6 +22,7 @@ function unlockAudio() {
 }
 
 window.onload = function() {
+    socket.emit("command", { command: "start", label: null });
     unlockAudio();
     startCamera();
 };

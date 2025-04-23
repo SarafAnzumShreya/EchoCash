@@ -61,6 +61,7 @@ currency_values = {
 
 def detect_currency(image):
     global label_timers, last_spoken_label
+    
     if not model:
         print("No model loaded, skipping detection")
         return {"label": "Model not loaded", "speak": False, "totals": total_amounts}
@@ -94,9 +95,14 @@ def detect_currency(image):
                 print(f"Waiting for {detected_label}, elapsed: {elapsed_time:.2f}s")
             else:
                 print(f"Tracking {detected_label}, elapsed: {elapsed_time:.2f}s (no voice feedback)")
+                
+        if speak:
+            label_timers.clear()
+            label_timers[detected_label] = current_time
 
         print(f"Detection result - Label: {detected_label}, Speak: {speak}")
         return {"label": detected_label, "speak": speak, "totals": total_amounts}
+    
     except Exception as e:
         print(f"Error in detect_currency: {e}")
         return {"label": "Detection error", "speak": False, "totals": total_amounts}
@@ -156,9 +162,10 @@ def handle_command(data):
         feedback = feedback.rstrip(", ")  
         if feedback == "the total is":  
             feedback = "the total is 0"
+        
         socketio.emit("command_feedback", {"message": feedback})
         print("Command processed, detection continues, speaking total")
-        
+        label_timers.clear()
         socketio.emit("total_update", {"totals": total_amounts})
         
     elif command == "cancel":
@@ -178,10 +185,14 @@ def handle_command(data):
             feedback = feedback.rstrip(", ")
             if feedback == f"{last_addition['value']} {last_addition['type']} removed and The total is":
                 feedback += " 0"
+            
             socketio.emit("command_feedback", {"message": feedback})
+            label_timers.clear()
         else:
             print("No additions to cancel")
+            
             socketio.emit("command_feedback", {"message": "Nothing to cancel"})
+            label_timers.clear()
             
         socketio.emit("total_update", {"totals": total_amounts})
         
@@ -191,6 +202,14 @@ def handle_command(data):
         addition_history.clear()
         print("Totals reset to zero")
         socketio.emit("command_feedback", {"message": "canceled"})
+        label_timers.clear()
+        
+    elif command == "start":
+        total_amounts = {"taka": 0, "dollar": 0, "euro": 0, "eurocent": 0}
+        last_spoken_label = None
+        addition_history.clear()
+        print("App started: Totals reset silently on client open")
+        socketio.emit("total_update", {"totals": total_amounts})
 
 @app.route("/")
 def index():
