@@ -36,3 +36,16 @@ canvas {
     border: 4px solid rgb(255, 255, 255);
     border-radius: 8px;
 }
+
+button {
+    font-size: 18px;  /* Increase font size */
+    padding: 15px 35px; /* Increase padding to make the button bigger */
+    margin: 10px;  /* Space between buttons */
+    border: none;
+    border-radius: 8px; 
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #909090; /* Darker blue on hover */
+}

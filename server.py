@@ -182,6 +182,11 @@ def handle_command(data):
                 feedback += f"{total_amounts['euro']} Euro, "
             if total_amounts["eurocent"] > 0:
                 feedback += f"{total_amounts['eurocent']} Eurocents, "
+            if (total_amounts["taka"] == 0 and 
+                total_amounts["dollar"] == 0 and 
+                total_amounts["euro"] == 0 and 
+                total_amounts["eurocent"] == 0):
+                feedback += " 0"
             feedback = feedback.rstrip(", ")
             if feedback == f"{last_addition['value']} {last_addition['type']} removed and The total is":
                 feedback += " 0"

@@ -1,4 +1,4 @@
-var socket = io.connect("wss://3341-123-136-25-129.ngrok-free.app");
+var socket = io.connect("wss://950b-123-136-25-129.ngrok-free.app");
 var video = document.getElementById("videoElement");
 var canvas = document.getElementById("videoCanvas");
 var ctx = canvas.getContext("2d");
@@ -7,7 +7,7 @@ var capturing = true;
 var videoStream = null;
 var tapCount = 0;
 var lastTapTime = 0;
-var TAP_TIMEOUT = 500; // 500ms window for multi-tap detection
+var TAP_TIMEOUT = 1000; // 500ms window for multi-tap detection
 var LONG_PRESS_TIMEOUT = 1500; // 1.5 seconds for long press detection
 var longPressTimer = null;
 var isLongPress = false;
