@@ -61,48 +61,55 @@ currency_values = {
 
 def detect_currency(image):
     global label_timers, last_spoken_label
-    
+
     if not model:
         print("No model loaded, skipping detection")
         return {"label": "Model not loaded", "speak": False, "totals": total_amounts}
 
     try:
-        print("Running YOLO detection...")
-        results = model(image)
+        print("Running YOLO detection ...")
+        results = model.predict(image, conf=0.5)  # Set minimum threshold to 0.5
+
         detected_label = "No currency detected"
         speak = False
 
         if results and results[0].boxes:
-            detected_classes = [int(box[-1]) for box in results[0].boxes.data]
-            print(f"Detected classes: {detected_classes}")
-            if detected_classes:
-                detected_label = label_mapping.get(detected_classes[0], "Unknown currency")
+            boxes = results[0].boxes.data.cpu().numpy()
 
-        current_time = time.time()
+            # Filter out detections below 0.5 confidence
+            boxes = boxes[boxes[:, 4] >= 0.5]
 
-        if detected_label not in label_timers:
-            label_timers.clear() 
-            label_timers[detected_label] = current_time
-            print(f"Timer started for {detected_label}")
-        else:
-            elapsed_time = current_time - label_timers[detected_label]
-            if elapsed_time >= 3 and detected_label in currency_values:
-                speak = True
-                last_spoken_label = detected_label  
-                label_timers[detected_label] = current_time  
-                print(f"Speak triggered for {detected_label} after {elapsed_time:.2f}s")
-            elif detected_label in currency_values:
-                print(f"Waiting for {detected_label}, elapsed: {elapsed_time:.2f}s")
-            else:
-                print(f"Tracking {detected_label}, elapsed: {elapsed_time:.2f}s (no voice feedback)")
-                
+            if len(boxes) > 0:
+                confidences = boxes[:, 4]
+                best_idx = confidences.argmax()
+                class_id = int(boxes[best_idx, -1])
+                print(f"Most confident class: {class_id}, confidence: {confidences[best_idx]:.2f}")
+                detected_label = label_mapping.get(class_id, "Unknown currency")
+
+                current_time = time.time()
+                if detected_label not in label_timers:
+                    label_timers.clear()
+                    label_timers[detected_label] = current_time
+                    print(f"Timer started for {detected_label}")
+                else:
+                    elapsed_time = current_time - label_timers[detected_label]
+                    if elapsed_time >= 3 and detected_label in currency_values:
+                        speak = True
+                        last_spoken_label = detected_label
+                        label_timers[detected_label] = current_time
+                        print(f"Speak triggered for {detected_label} after {elapsed_time:.2f}s")
+                    elif detected_label in currency_values:
+                        print(f"Waiting for {detected_label}, elapsed: {elapsed_time:.2f}s")
+                    else:
+                        print(f"Tracking {detected_label}, elapsed: {elapsed_time:.2f}s (no voice feedback)")
+
         if speak:
             label_timers.clear()
-            label_timers[detected_label] = current_time
+            label_timers[detected_label] = time.time()
 
         print(f"Detection result - Label: {detected_label}, Speak: {speak}")
         return {"label": detected_label, "speak": speak, "totals": total_amounts}
-    
+
     except Exception as e:
         print(f"Error in detect_currency: {e}")
         return {"label": "Detection error", "speak": False, "totals": total_amounts}
